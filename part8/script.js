@@ -64,9 +64,15 @@ document
   });
 
 //example 9
-document.addEventListener('DOMContentLoaded',function(){
-  document.getElementById("domStatus").textContent = "DOM Fully Loaded"
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("domStatus").textContent = "DOM Fully Loaded";
 });
 
 //example 10
 
+document
+  .getElementById("toggleHighlight")
+  .addEventListener("click", function () {
+    let descriptionText = document.getElementById("descriptionText");
+    descriptionText.classList.add("highlight");
+  });

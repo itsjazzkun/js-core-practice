@@ -4,7 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
     { id: 2, name: "Product 2", price: 9.99 },
     { id: 3, name: "Product 3", price: 89.99 },
   ];
-  const cart = [];
+
+  // load from localStorage on start, fallback to empty array
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
   const productList = document.getElementById("product-list");
   const cartItems = document.getElementById("cart-items");
   const emptyCartMsg = document.getElementById("empty-cart");
@@ -15,10 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
   products.forEach((product) => {
     const productDiv = document.createElement("div");
     productDiv.classList.add("product");
-    productDiv.innerHTML = `<span>${product.name} - $ ${product.price.toFixed(2)}</span>
+    productDiv.innerHTML = `<span>${product.name} - $${product.price.toFixed(2)}</span>
       <button data-id="${product.id}">Add To Cart</button>`;
     productList.appendChild(productDiv);
   });
+
+  // render on load so saved cart shows immediately
+  renderCart();
 
   productList.addEventListener("click", (e) => {
     if (e.target.tagName === "BUTTON") {
@@ -28,8 +34,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // event delegation for remove buttons
+  cartItems.addEventListener("click", (e) => {
+    if (e.target.classList.contains("remove-btn")) {
+      const productId = parseInt(e.target.getAttribute("data-id"));
+      const index = cart.findIndex((p) => p.id === productId);
+      if (index !== -1) {
+        cart.splice(index, 1); // remove one item at that index
+        saveCart();
+        renderCart();
+      }
+    }
+  });
+
+  function saveCart() {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }
+
   function addToCart(product) {
     cart.push(product);
+    saveCart();
     renderCart();
   }
 
@@ -40,22 +64,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cart.length > 0) {
       emptyCartMsg.classList.add("hidden");
       cartTotalMsg.classList.remove("hidden");
-      cart.forEach((item,index) => {
+      cart.forEach((item) => {
         totalP += item.price;
         const cartItem = document.createElement("div");
-        cartItem.innerHTML = `${item.name} - $${item.price.toFixed(2)}`;
+        cartItem.innerHTML = `${item.name} - $${item.price.toFixed(2)}
+          <button class="remove-btn" data-id="${item.id}">Remove</button>`;
         cartItems.appendChild(cartItem);
-        priceTotal.textContent = `${totalP.toFixed(2)}`;
       });
-      
+      priceTotal.textContent = `$${totalP.toFixed(2)}`;
     } else {
       emptyCartMsg.classList.remove("hidden");
+      cartTotalMsg.classList.add("hidden");
       priceTotal.textContent = `0.00`;
     }
   }
-  checkoutbtn.addEventListener('click',()=>{
-    cart.length = 0
-    alert("checkout done");
+
+  checkoutbtn.addEventListener("click", () => {
+    cart.length = 0;
+    localStorage.removeItem("cart");
+    alert("Checkout done");
     renderCart();
-  })
+  });
 });

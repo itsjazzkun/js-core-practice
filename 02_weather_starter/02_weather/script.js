@@ -1,55 +1,69 @@
-document.addEventListener('DOMContentLoaded',()=>{
-    const cityInput = document.getElementById("city-input");
-    const getWeatherBtn = document.getElementById("get-weather-btn");
-    const  weatherInfo = document.getElementById("weather-info");
-    const cityNameDisplay = document.getElementById("city-name");
-    const tempDisplay = document.getElementById("temperature");
-    const descriptionDisplay = document.getElementById("description");
-    const errorMessage = document.getElementById("error-message");
+// script.js
+document.addEventListener("DOMContentLoaded", () => {
+  const API_KEY = ""; // Replace with your OpenWeather API Key
+  const cityInput = document.getElementById("city-input");
+  const addCityBtn = document.getElementById("add-city-btn");
+  const cityList = document.getElementById("city-list");
+  const weatherContainer = document.getElementById("weather-container");
 
-    const API_KEY = ""; //env variable
+  let cities = JSON.parse(localStorage.getItem("cities")) || [];
 
-     getWeatherBtn.addEventListener('click',async ()=> {
-        const city = cityInput.value.trim()
-        if(!city) return;
+  // Render initial cities from local storage
+  renderCities();
 
-     //error and takes time
-
-     try {
-       weatherData = await fetchWeatherData(city)
-       displayWeatherData(weatherData)
-     } catch (error) {
-        showError()
-     }
-
-     })
-     async function fetchWeatherData(city){
-        //gets the data
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
-        const response = await fetch(url);
-        console.log(typeof response);
-        console.log("respone",response);
-        
-    if(!response.ok){
-        throw new Error("City Not Found");
+  // Add city on button click
+  addCityBtn.addEventListener("click", () => {
+    const city = cityInput.value.trim();
+    if (city && !cities.includes(city)) {
+      cities.push(city);
+      saveCities();
+      renderCities();
     }
-        const data = await response.json()
-        return data
-    
-     }
-     function displayWeatherData(data){
-        console.log(data);
-        const{name, main, weather} = data
-        cityNameDisplay.textContent = name; 
-         tempDisplay.textContent = `Temprature : ${main.temp}`;
-         descriptionDisplay.textContent = `Weather :${weather[0].description}`;
-        //unhide 
-        weatherInfo.classList.remove('hidden')
-        errorMessage.classList.add('hidden')
-       
-     }
-    function showError(weatherData) {
-        weatherInfo.classList.remove('hidden');
-        errorMessage.classList.add('hidden')
-       }
-})
+    cityInput.value = ""; // Clear input field
+  });
+
+  // Fetch weather data for the selected city
+  cityList.addEventListener("click", async (e) => {
+    if (e.target.tagName === "LI") {
+      const city = e.target.textContent;
+      const weatherData = await fetchWeatherData(city);
+      displayWeather(weatherData);
+    }
+  });
+
+  // Render the list of cities
+  function renderCities() {
+    cityList.innerHTML = ""; // Clear existing cities
+    cities.forEach((city) => {
+      const li = document.createElement("li");
+      li.textContent = city;
+      cityList.appendChild(li);
+    });
+  }
+
+  // Fetch weather data from the API
+  async function fetchWeatherData(city) {
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      alert("City not found!");
+      return;
+    }
+    const data = await response.json();
+    return data;
+  }
+
+  // Display the weather data in the weather container
+  function displayWeather(data) {
+    weatherContainer.innerHTML = `
+            <h3>${data.name}</h3>
+            <p>Temperature: ${data.main.temp}°C</p>
+            <p>Weather: ${data.weather[0].description}</p>
+        `;
+  }
+
+  // Save cities to local storage
+  function saveCities() {
+    localStorage.setItem("cities", JSON.stringify(cities));
+  }
+});
